@@ -1,4 +1,7 @@
 from manim import *
+from manim_speech import VoiceoverScene
+from manim_speech.interfaces.gtts import GTTSSpeechSynthesizer
+
 
 class GrowFromSide(Animation):
     def __init__(self, mobject, edge=LEFT, rate_func=smooth,**kwargs):
@@ -85,16 +88,20 @@ _CODE1 = '''class Scene1(MovingCameraScene):
 '''
 
 
-class Scene1(MovingCameraScene):
+class Scene1(VoiceoverScene,MovingCameraScene):
+    def setup(self):
+        MovingCameraScene.setup(self)
+
     def construct(self):
+        self.set_speech_synthesizer(GTTSSpeechSynthesizer())
         self.sub1()
         self.sub2()
 
     def sub2(self):
         def get_recs(title, color=GREEN):
-            t = Text(title,color=color)
+            t = Tex(title,color=color)
             stroke_rec = Rectangle(
-                width=3.5,height=1.3,
+                width=3,height=1,
                 fill_opacity=0,color=color,
                 stroke_width=4,stroke_color=color
             )
@@ -114,7 +121,7 @@ class Scene1(MovingCameraScene):
         vl, video_recs = get_recs("Video", GREEN)
         al, audio_recs = get_recs("Audio", BLUE)
 
-        main_grp = VGroup(video_recs, audio_recs).arrange(DOWN, aligned_edge=RIGHT).shift(UP)
+        main_grp = VGroup(video_recs, audio_recs).arrange(DOWN, aligned_edge=RIGHT).shift(UP+LEFT*0.4)
         al.next_to(audio_recs[1],DOWN,buff=0)
         hours = VGroup(*[
             Text(t).next_to(al.point_from_proportion(0.3333*i), DOWN)
@@ -134,50 +141,63 @@ class Scene1(MovingCameraScene):
             GrowFromSide(audio_recs[-1][0]),
             GrowFromSide(video_recs[-1][0]),
         ]
-
-        self.play(
-            LaggedStart(
-                Write(video_recs[:-1]),
-                Write(audio_recs[:-1]),
-                Write(hours),
-                Write(_TEXTS),
-            )
-        )
-        self.wait()
-        for _anim in _anims:
+        with self.voiceover("For example, one could start by animating an idea that belongs in the middle of the video, and then try to come up with an introduction that complements it.") as tk:
             self.play(
-                _anim,
-                run_time=3
+                LaggedStart(
+                    Write(video_recs[:-1]),
+                    Write(audio_recs[:-1]),
+                    Write(hours),
+                    Write(_TEXTS),
+                ),
+                run_time=2.5
             )
-            self.wait()
+            # for _anim in _anims:
+            #     self.play(
+            #         _anim,
+            #         run_time=3
+            #     )
+            #     self.wait()
+            self.play(_anims[0],run_time=1.5)
+            self.play(_anims[1],run_time=1.3)
+            self.wait(3)
+            self.play(_anims[2],run_time=1.2)
+            self.wait(0.3)
+            self.play(_anims[3],run_time=1.2)
+            self.wait(0.5)
         video_recs[-1][1].save_state()
         audio_recs[-1][1].save_state()
-        self.play(
-            LaggedStart(
-                GrowFromSide(video_recs[-1][1],rate_func=lambda t: smooth(1-t)),
-                GrowFromSide(audio_recs[-1][1],rate_func=lambda t: smooth(1-t)),
-                lag_ratio=0.2
-            ),
-            run_time=2
-        )
-        video_recs[-1][1].restore()
-        audio_recs[-1][1].restore()
-        self.play(
-            LaggedStart(
-                GrowFromSide(video_recs[-1][1]),
-                GrowFromSide(audio_recs[-1][1]),
-                lag_ratio=0.2
-            ),
-            run_time=2
-        )
-        self.play(
-            FadeOut(video_recs[-1][1],shift=UP),
-            FadeOut(audio_recs[-1][1],shift=DOWN),
-            FadeOut(video_recs[-2][1],shift=UP),
-            FadeOut(audio_recs[-2][1],shift=DOWN),
-            Create(cross)
-        )
-        self.wait()
+        with self.voiceover("Generally, scenes that are created improvisationally end up being modified multiple times or even scrapped, because they don't fit in with the rest.") as tk:
+            self.wait(3.2)
+            self.play(
+                LaggedStart(
+                    GrowFromSide(video_recs[-1][1],rate_func=lambda t: smooth(1-t)),
+                    GrowFromSide(audio_recs[-1][1],rate_func=lambda t: smooth(1-t)),
+                    lag_ratio=0.2
+                ),
+                run_time=2
+            )
+            video_recs[-1][1].restore()
+            audio_recs[-1][1].restore()
+            self.play(
+                LaggedStart(
+                    GrowFromSide(video_recs[-1][1]),
+                    GrowFromSide(audio_recs[-1][1]),
+                    lag_ratio=0.2
+                ),
+                run_time=2
+            )
+            self.play(
+                FadeOut(video_recs[-1][1],shift=UP),
+                FadeOut(audio_recs[-1][1],shift=DOWN),
+                FadeOut(video_recs[-2][1],shift=UP),
+                FadeOut(audio_recs[-2][1],shift=DOWN),
+                Create(cross)
+            )
+        self.wait(0.2)
+        with self.voiceover("If you are a beginner to video production, this approach can be highly inefficient, as you might end up wasting a lot of time doing the same scenes again and again. This might be especially discouraging for technical people who aspire to produce videos with Manim.") as tk:
+            pass
+        with self.voiceover("In this tutorial we seek to alleviate this issue by showing you how to plan out videos in advance. ") as tk:
+            pass
         self.play(
             LaggedStartMap(FadeOut,self.mobjects,lag_ratio=0)
         )
@@ -187,14 +207,27 @@ class Scene1(MovingCameraScene):
     
     def sub1(self):
         title = VGroup(
-            Text("Manim Video Production 101", weight=BOLD),
-            Text("Scripting and Storyboarding"),
-        ).arrange(DOWN,buff=0.5)
-        title.set(width=config.frame_width-1).to_edge(UP)
+            Tex("\\bf Manim Video Production 101"),
+            Tex("Scripting and Storyboarding"),
+        ).arrange(DOWN,buff=1)
+        title.set(width=config.frame_width-3).to_edge(UP,buff=1)
 
-        self.play(Write(title[0]))
-        self.wait()
-        self.play(Write(title[1]))
+        def updater_wave(mob, dt):
+            t_offset = mob.t_offset + dt * 0.2
+            center = mob.get_center()
+            width = mob.width
+            mob.become(Wave(t_offset=t_offset))
+            mob.t_offset = t_offset
+            mob.width = width
+            mob.move_to(center)
+
+        with self.voiceover(text="Welcome to Manim Video Production 101") as tracker:
+            self.play(Write(title[0]), run_time=tracker.duration)
+        with self.voiceover(text="""
+In this tutorial, we will teach you how to write a script and create a storyboard for your Manim video, so that you can plan things in advance and don't have to re-record or re-animate your scenes.
+""") as tracker:
+            self.wait(2.4)
+            self.play(Write(title[1]))
         self.wait()
 
         screen_im = ImageMobject(self.camera.get_image())
@@ -206,51 +239,43 @@ class Scene1(MovingCameraScene):
         )
         screen_grp = Group(bk, screen_im)
 
+        
+
         self.add(screen_grp)
-        self.wait()
-        self.play(
-            screen_grp.animate
-                .set(width=3.3)
-                .to_corner(DL,buff=1.3)
-                .shift(UP*0.4),
-            run_time=3
-        )
-        self.wait()
+        with self.voiceover(text="To create a full-fledged Manim video, one needs to come up with multiple layers of media, such as recording voiceovers and implementing the animations in Python.") as tracker:
+            self.wait(0.3)
+            self.play(
+                screen_grp.animate
+                    .set(width=3.3)
+                    .to_corner(DL,buff=1.3)
+                    .shift(UP*0.4),
+                run_time=3
+            ) 
+            self.wait(2.5)
+            code = Code(
+                code=_CODE1,
+                language="python",
+                style="monokai",
+                font="Consolas"
+            )
 
-        code = Code(
-            code=_CODE1,
-            language="python",
-            style="monokai",
-            font="Fira Code"
-        )
+            _GRP = Group(
+                MathTex("="),
+                Wave().set(width=screen_grp.width),
+                MathTex("+"),
+                code.set(width=screen_grp.width)
+            ).arrange(RIGHT).next_to(screen_grp, RIGHT)
+            self.play(
+                FadeIn(_GRP[:2])
+            )
+            _GRP[1].add_updater(updater_wave)    
+            self.wait(1.8)
+            self.play(
+                Write(_GRP[2]),
+                Write(_GRP[3]),
+            )
+            self.wait(tracker.duration - 0.3 - 2.4 - 1 - 3.8 - 1.8)
 
-        _GRP = Group(
-            MathTex("="),
-            Wave().set(width=screen_grp.width),
-            MathTex("+"),
-            code.set(width=screen_grp.width)
-        ).arrange(RIGHT).next_to(screen_grp, RIGHT)
-
-        def updater_wave(mob, dt):
-            t_offset = mob.t_offset + dt * 0.2
-            center = mob.get_center()
-            width = mob.width
-            mob.become(Wave(t_offset=t_offset))
-            mob.t_offset = t_offset
-            mob.width = width
-            mob.move_to(center)
-
-        self.play(
-            FadeIn(_GRP[:2])
-        )
-        self.wait()
-        _GRP[1].add_updater(updater_wave)    
-        self.wait()
-        self.play(
-            Write(_GRP[2]),
-            Write(_GRP[3]),
-        )
-        self.wait(3)
 
         self.save_screen = ImageMobject(self.camera.get_image())
 
@@ -258,19 +283,25 @@ class Scene1(MovingCameraScene):
             width=16,height=9,
             color=BLACK,fill_opacity=1
         ).set(width=config.frame_width)
+        with self.voiceover("There is more than one way of producing a video. Beginners tend to use an improvisational approach, where one records audio on-the-go and come up with visuals without any specific order or prior planning") as tk:
+            self.wait(tk.duration)
         self.play(FadeIn(bk))
         _GRP[1].clear_updaters()
         self.remove(*self.mobjects)
 
 
-class Scene2(Scene):
+class Scene2(VoiceoverScene,MovingCameraScene):
+    def setup(self):
+        MovingCameraScene.setup(self)
+
     def construct(self):
+        self.set_speech_synthesizer(GTTSSpeechSynthesizer())
         self.sub1()
         self.sub2()
 
     def sub1(self):
         title = Tex(r"\sf Script"," = ","Voiceover Text + Verbal Descriptions")
-        title.to_edge(UP)
+        title.to_edge(UP,buff=1)
 
         tex_boxes = VGroup(*[
             Tex(t)
@@ -279,7 +310,7 @@ class Scene2(Scene):
                 "\\sc Body",
                 "\\sc Conclusion",
             ]
-        ]).arrange(DOWN,buff=0.8).to_edge(LEFT,buff=2).shift(UP)
+        ]).arrange(DOWN,buff=0.8).to_edge(LEFT,buff=2).shift(UP*0.7)
 
         _BOX = StyleRectangle(tex_boxes[0])
         _BOXES = VGroup(*[
@@ -313,53 +344,62 @@ class Scene2(Scene):
         _ARROW_UP = _ARROW_DOWN.copy().set_y(_T_RIGHT[0].get_y())
 
         # self.add(title, tex_boxes, _BOXES)
-        self.play(Write(title[0]))
-        self.wait()
-        self.play(Write(title[1:]))
-        self.wait()
+        with self.voiceover("Most well-produced videos start out their lifetime as a script, which is basically just text. This includes the text of the voiceover to be performed by the narrator and verbal description of the visuals that will constitute the video.") as tk:
+            self.wait(3)
+            self.play(Write(title[0]))
+            self.wait(4.7)
+            self.play(Write(title[1:]))
+            self.wait()
 
-        self.play(
-            LaggedStart(*[
-                LaggedStartMap(Write,_z)
-                for _z in _ZIP
-            ],lag_ratio=1)
-        )
-        self.wait()
+        with self.voiceover("So to produce a video, you first need to write an essay  on the topic you are producing about. The language does not have to be flowery it can be set in a plain and explanatory tone. The main requirement for it is to be coherent and convey information efficiently  about whatever you are trying to explain.") as tk:
+            self.wait(3)
+            self.play(
+                LaggedStart(*[
+                    LaggedStartMap(Write,_z)
+                    for _z in _ZIP
+                ],lag_ratio=1),
+                run_time=4
+            )
+            self.wait(0.8)
 
-        self.play(
-            Write(_MIDDLE[0])
-        )
+            self.play(
+                Write(_MIDDLE[0],run_time=1)
+            )
+            self.wait()
+            self.play(
+                Write(_MIDDLE[1],run_time=1)
+            )
+            self.wait()
+            self.play(
+                Create(_CROSS),run_time=1
+            )
+            self.wait(3)
+            self.play(
+                DrawBorderThenFill(_TICK)
+            )
+            self.wait()
         self.wait()
-        self.play(
-            Write(_MIDDLE[1])
-        )
-        self.wait()
-        self.play(
-            Create(_CROSS)
-        )
-        self.wait()
-        self.play(
-            DrawBorderThenFill(_TICK)
-        )
-        self.wait()
-        self.play(Write(_DOWN[0]))
-        self.wait()
-        self.play(Write(_T_LEFT[0]))
-        self.wait()
-        self.play(
-            GrowArrow(_ARROW_UP),
-            TransformFromCopy(_T_LEFT[0],_T_RIGHT[0]),
-            run_time=3
-        )
-        self.wait()
-        self.play(Write(_T_LEFT[1]))
-        self.wait()
-        self.play(
-            GrowArrow(_ARROW_DOWN),
-            TransformFromCopy(_T_LEFT[1],_T_RIGHT[1]),
-            run_time=3
-        )
-        self.wait(2)
+        with self.voiceover("The script acts as a single source of truth when it comes to the latter stages of producing the video. Your essay becomes the voiceover, and the verbal descriptions remind you or the person responsible for animating how the scene was envisioned at the planning stage.") as tk:
+            self.wait(2)
+            self.play(Write(_DOWN[0]))
+            self.wait(2)
+            self.play(Write(_T_LEFT[0]))
+            self.wait(0.5)
+            self.play(
+                GrowArrow(_ARROW_UP),
+                TransformFromCopy(_T_LEFT[0],_T_RIGHT[0]),
+                run_time=3
+            )
+            self.wait(0.5)
+            self.play(Write(_T_LEFT[1]))
+            self.wait(0.5)
+            self.play(
+                GrowArrow(_ARROW_DOWN),
+                TransformFromCopy(_T_LEFT[1],_T_RIGHT[1]),
+                run_time=3
+            )
+        with self.voiceover("But plain text often falls short in describing visual scenes, especially when it comes to technical subjects. That's why you might need to draw sketches that complement the script. These are simplified drawings or ASCII art that show in sufficient detail how the visuals should come into the scene, move and interact with each other.") as tk:
+            self.wait(tk.duration)
         self.play(FadeOut(Group(*self.mobjects),lag_ratio=0))
         self.wait(0.1)
 
@@ -369,11 +409,11 @@ one needs to come up with multiple layers of media,\\
 such as recording ''',r'{\tt <Write(2)>}',r''' voiceovers and\\
 implementing the ''',r'{\tt <Write(3)>}',''' animations in Python.''',tex_environment="flushleft")
         _UP_TEXT.width = config.frame_width - 3
-        _UP_TEXT.to_edge(UP)
+        _UP_TEXT.to_edge(UP,buff=1)
         _DOWN_TEXT = Paragraph(""" [1]  =    [2]     +    [3]
 video   recording    manim code
 
-- - - - - - - - - - - - - - - - - - - - - - - - - -
+---------------------------
 
 [1] is a window showing the current screen 
     (a "rectangle" that contains the everything 
@@ -381,18 +421,47 @@ video   recording    manim code
 [2] a screen containing the live waveform of the 
     audio that is playing at that moment (see below)
 [3] is the manim code that generates this scene
-""", font="Fira Code",line_spacing=1).scale(0.34)
-        _DOWN_TEXT.to_edge(DOWN,buff=0.7)
+""", font="Consolas",line_spacing=1).scale(0.29)
+        _DOWN_TEXT.to_edge(DOWN,buff=1.3)
         bk = Rectangle().surround(_DOWN_TEXT,stretch=True,buff=0.6)
         # self.add(_UP_TEXT,_DOWN_TEXT,bk)
-        self.play(
-            Write(_UP_TEXT),run_time=6
-        )
+            
+        self.wait(0.5)
+        with self.voiceover("Let's demonstrate with an earlier scene from this video.") as tk:
+            self.wait()
+            self.play(
+                Write(_UP_TEXT),run_time=tk.duration-1
+            )
         self.wait()
-
-        self.play(Indicate(_UP_TEXT[1]))
-        self.play(Indicate(VGroup(*_UP_TEXT[3][:-1],_UP_TEXT[2][-1])))
-        self.play(Indicate(VGroup(*_UP_TEXT[5][:-1],_UP_TEXT[4][-1])))
+        with self.voiceover("As you can see, the script at the top is interleaved with markup that describes exactly when the animations should be triggered. This sort of writing also helps you to imagine the scene before you start writing the code, so that you spend less time redoing things.") as tk:
+            self.wait(3.5)
+            self.play(Indicate(_UP_TEXT[1]))
+            self.play(Indicate(VGroup(*_UP_TEXT[3][:-1],_UP_TEXT[2][-1])))
+            self.play(Indicate(VGroup(*_UP_TEXT[5][:-1],_UP_TEXT[4][-1])))
+        self.wait(0.7)
+        with self.voiceover("Then you create the storyboard, which is basically a sketch that shows how the objects should look like on the screen.") as tk:
+            self.wait()
+            self.play(Create(bk),run_time=2)
+            self.wait(tk.duration-1-2)
+        self.wait(0.5)
+        with self.voiceover("It is divided into top and bottom parts. The top part shows the actual locations and shapes of objects, whereas the bottom part is reserved for comments.") as tk:
+            self.wait(1.1)
+            self.play(Write(_DOWN_TEXT[:3]),run_time=0.5)
+            self.wait(0.2)
+            self.play(Write(_DOWN_TEXT[3:]),run_time=0.5)
+            self.wait(0.5)
         self.wait()
-        self.play(Write(_DOWN_TEXT),Create(bk))
-        self.wait(3)
+        with self.voiceover("In fact, this entire video has been planned using this special syntax.") as tk:
+            pass
+        self.play(FadeOut(Group(*self.mobjects)))
+        self.wait(0.1)
+        with self.voiceover("You can use the link on your screen to access this guide—you can also find it in the video description below.") as tk:
+            self.wait(1.2)
+            self.play(
+                Write(Text("https://hackmd.io/@prism0x/manim-scripting-storyboarding", font="Consolas").set(width=config.frame_width-2.5)),
+                run_time=1.5
+            )
+            self.wait(tk.duration - 1.2 - 1.5)
+        self.wait()
+        self.play(FadeOut(Group(*self.mobjects)))
+        self.wait(0.1)
