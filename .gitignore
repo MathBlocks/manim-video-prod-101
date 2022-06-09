@@ -2,3 +2,4 @@ media
 __pycache__
 .vscode
 *.mp4
+.DS_store

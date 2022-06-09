@@ -553,14 +553,20 @@ video   recording    manim code
         self.play(FadeOut(group1))
 
         with self.voiceover(
-            "You can use the link on your screen to access this guide. You can also find it in the video description below."
+            """You can use the links on your screen to access the screenplay and code for this video. You can also find them in the video description below."""
         ) as tk:
             self.wait(1.2)
             self.play(
                 Write(
-                    Text(
-                        "https://hackmd.io/@prism0x/manim-screenplay-writing-storyboarding",
-                        font="Consolas",
+                    VGroup(
+                        Text(
+                            "Screenplay: https://hackmd.io/@prism0x/manim-screenplay-writing-storyboarding",
+                            font="Consolas",
+                        ),
+                        Text(
+                            "Code: https://github.com/MathBlocks/manim-video-prod-101",
+                            font="Consolas",
+                        ).arrange(DOWN, buff=0.5),
                     ).set(width=config.frame_width - 2.5)
                 ),
                 run_time=1.5,
